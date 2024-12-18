@@ -1,5 +1,6 @@
 package com.example.aptService.elastic.domain;
 
+import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -7,6 +8,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 
 
 @Document(indexName = "residential")
+@Getter
 public class ResidentialDocument {
     @Id
     private String id;
