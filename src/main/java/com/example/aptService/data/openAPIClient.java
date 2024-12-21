@@ -1,16 +1,15 @@
 package com.example.aptService.data;
 
+import com.example.aptService.domain.Residential;
+import com.example.aptService.elastic.domain.ResidentialDocument;
+import com.example.aptService.elastic.repository.ResidentialElasticRepository;
+import com.example.aptService.repository.ResidentialRepository;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.connector.Request;
-import org.apache.http.entity.ContentType;
 import org.json.XML;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.beans.XMLDecoder;
+import org.springframework.stereotype.Component;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,35 +17,34 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
-@Service
-@RequiredArgsConstructor
+@Component
 public class openAPIClient {
-    private final ApartmentTestService apartmentTestService;
-    @Value("${spring.openAPI.apiUrl}")
     private final String apiUrl;
-    @Value("${spring.openAPI.serviceKey}")
     private final String serviceKey;
 
-//    // JSON 응답을 객체로 변환
-//    ObjectMapper mapper = new ObjectMapper();
-//    List<Apartment> apartments = Arrays.asList(mapper.readValue(response, Apartment[].class));
-//
-//    // 데이터 출력
-//        apartments.forEach(apartment -> {
-//        System.out.println("Name: " + apartment.getName());
-//        System.out.println("Location: " + apartment.getLocation());
-//        System.out.println("Price: " + apartment.getPrice());
-//        System.out.println("----------");
-//    });
+    private final ResidentialRepository residentialRepository;
+    private final ResidentialElasticRepository residentialElasticRepository;
 
-    void testGetData(String LAWD_CD, String DEAL_YWD) throws MalformedURLException, IOException {
+    public openAPIClient(@Value("${spring.openAPI.apiUrl}") String apiUrl,
+                         @Value("${spring.openAPI.serviceKey}") String serviceKey,
+                         ResidentialRepository residentialRepository,
+                         ResidentialElasticRepository residentialElasticRepository) {
+        this.apiUrl = apiUrl;
+        this.serviceKey = serviceKey;
+        this.residentialRepository = residentialRepository;
+        this.residentialElasticRepository = residentialElasticRepository;
+    }
+
+    void getData(String LAWD_CD, String DEAL_YWD) throws MalformedURLException, IOException {
         HttpURLConnection urlConnection = null;
         InputStream stream = null;
 
 
-        String requestUrl = apiUrl + "serviceKey=" + serviceKey + "&LAWD_CD=" + LAWD_CD + "&DEAL_YMD=" + DEAL_YMD;
+        String requestUrl = apiUrl + "serviceKey=" + serviceKey + "&LAWD_CD=" + LAWD_CD + "&DEAL_YMD=" + DEAL_YWD;
         System.out.println(requestUrl);
 
         try {
@@ -57,12 +55,27 @@ public class openAPIClient {
             String result = readStreamToString(stream);
             log.info(result);
 
-            System.out.println(XML.toJSONObject(result));
-            System.out.println(XML.toJSONObject(result).toString());
-
             String result2 = XML.toJSONObject(result).toString();
 
-            System.out.println(apartmentTestService.parsingJsonObject(result2));
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(result2);
+
+            JsonNode itemsNode = rootNode.path("response").path("body").path("items").path("item");
+
+            List<ApartmentItem> itemList = new ArrayList<>();
+            for (JsonNode itemNode : itemsNode) {
+                ApartmentItem item = objectMapper.treeToValue(itemNode, ApartmentItem.class);
+                itemList.add(item);
+            }
+
+            for (ApartmentItem item : itemList) {
+                Residential residential = ApartmentItem.toTable(item);
+                Residential savedResidential = residentialRepository.save(residential);
+                System.out.println(savedResidential.getResidentialId());
+
+                ResidentialDocument residentialDocument = ResidentialDocument.to(savedResidential);
+                residentialElasticRepository.save(residentialDocument);
+            }
 
             if (stream != null) stream.close();
         } catch(IOException e) {
@@ -97,7 +110,6 @@ public class openAPIClient {
         while((readLine = br.readLine()) != null) {
             result.append(readLine + "\n\r");
         }
-
         br.close();
 
         return result.toString();

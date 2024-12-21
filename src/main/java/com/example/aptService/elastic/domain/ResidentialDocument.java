@@ -1,6 +1,7 @@
 package com.example.aptService.elastic.domain;
 
 import com.example.aptService.data.ApartmentItem;
+import com.example.aptService.domain.Residential;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
@@ -17,18 +18,18 @@ public class ResidentialDocument {
     private String id;
     @Field(type = FieldType.Long, index = false, docValues = false)
     private Long residential_id;
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.Long)
     private int buildYear;
-    @Field(type = FieldType.Text)
-    private String dealAmount;
-    @Field(type = FieldType.Text)
-    private String excluUseAr;
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Long)
+    private Long dealAmount;
+    @Field(type = FieldType.Long)
+    private Long excluUseAr;
+    @Field(type = FieldType.Keyword)
     private String umdNm;
 
-    public ResidentialDocument to(ApartmentItem item) {
+    public static ResidentialDocument to(Residential item) {
         return ResidentialDocument.builder()
-                .residential_id(1L)
+                .residential_id(item.getResidentialId())
                 .buildYear(item.getBuildYear())
                 .dealAmount(item.getDealAmount())
                 .excluUseAr(item.getExcluUseAr())

@@ -1,20 +1,27 @@
 package com.example.aptService.domain;
 
+import com.example.aptService.controller.port.out.ResidentialData;
 import com.example.aptService.data.ApartmentItem;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "residential")
 @Builder
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Residential {
-    @Id
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "residential_id")
-    private Long residential_id;
+    private Long residentialId;
     private String umdNm;
-    private String excluUseAr;
+    private Long excluUseAr;
     private int buildYear;
-    private String dealAmount;
+    private Long dealAmount;
     private String aptName;
     private int floor;
     private String aptDong;
@@ -29,10 +36,9 @@ public class Residential {
         return Residential.builder()
                 .aptDong(apartmentItem.getAptDong())
                 .aptName(apartmentItem.getAptName())
-                .residential_id(1L)
                 .buildYear(apartmentItem.getBuildYear())
                 .dealMonth(apartmentItem.getDealMonth())
-                .dealAmount(apartmentItem.getDealAmount())
+                .dealAmount(Long.parseLong(apartmentItem.getDealAmount()))
                 .dealDay(apartmentItem.getDealDay())
                 .dealYear(apartmentItem.getDealYear())
                 .floor(apartmentItem.getFloor())
@@ -42,6 +48,24 @@ public class Residential {
                 .excluUseAr(apartmentItem.getExcluUseAr()).
                 build();
     }
+
+    public static ResidentialData from(Residential residential) {
+        return ResidentialData.builder()
+                .aptDong(residential.getAptDong())
+                .umdNm(residential.getUmdNm())
+                .residentialName(residential.getAptName())
+                .dealYear(residential.getDealYear())
+                .dealMonth(residential.getDealMonth())
+                .dealDay(residential.getDealDay())
+                .jibun(residential.getJibun())
+                .landLeaseholdGbn(residential.getLandLeaseholdGbn())
+                .floor(residential.getFloor())
+                .excluUseAr(residential.getExcluUseAr())
+                .residentialId(residential.getResidentialId())
+                .buildYear(residential.getBuildYear())
+                .dealAmount(residential.getDealAmount()).build();
+    }
+
 
 
 

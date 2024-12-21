@@ -19,6 +19,7 @@ import org.springframework.data.elasticsearch.support.HttpHeaders;
 import java.util.List;
 
 @Configuration
+@EnableElasticsearchRepositories
 public class ElasticConfig extends ElasticsearchConfiguration {
     @Value("${spring.elasticsearch.uris}")
     private String esHost;

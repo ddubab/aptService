@@ -1,21 +1,20 @@
 package com.example.aptService.data;
 
 import com.example.aptService.domain.Residential;
-import com.example.aptService.elastic.domain.ResidentialDocument;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Builder
+@NoArgsConstructor //todo : 왜 json 객체를 맵핑해줄 때 기본 생성자가 필요할까?
 public class ApartmentItem {
     @JsonProperty("umdNm")
     private String umdNm;
 
     @JsonProperty("excluUseAr")
-    private String excluUseAr;
+    private Long excluUseAr;
 
     @JsonProperty("buildYear")
     private int buildYear;
@@ -23,7 +22,7 @@ public class ApartmentItem {
     @JsonProperty("dealAmount")
     private String dealAmount;
 
-    @JsonProperty("aptName")
+    @JsonProperty("aptNm")
     private String aptName;
 
     @JsonProperty("floor")
@@ -47,15 +46,14 @@ public class ApartmentItem {
     @JsonProperty("landLeaseholdGbn")
     private String landLeaseholdGbn;
 
-    //todo : 이름 고민
-    public Residential toTable(ApartmentItem apartmentItem) {
+    public static Residential toTable(ApartmentItem apartmentItem) {
+        Long newDealAmount = exchangeValue(apartmentItem.getDealAmount());
         return Residential.builder()
                 .aptDong(apartmentItem.getAptDong())
                 .aptName(apartmentItem.getAptName())
-                .residential_id(1L)
                 .buildYear(apartmentItem.getBuildYear())
                 .dealMonth(apartmentItem.getDealMonth())
-                .dealAmount(apartmentItem.getDealAmount())
+                .dealAmount(newDealAmount)
                 .dealDay(apartmentItem.getDealDay())
                 .dealYear(apartmentItem.getDealYear())
                 .floor(apartmentItem.getFloor())
@@ -66,12 +64,10 @@ public class ApartmentItem {
                 build();
     }
 
-    public ResidentialDocument toDocument(ApartmentItem item) {
-        return ResidentialDocument.builder()
-                .residential_id(1L)
-                .buildYear(item.getBuildYear())
-                .dealAmount(item.getDealAmount())
-                .excluUseAr(item.getExcluUseAr())
-                .umdNm(item.getUmdNm()).build();
+    private static Long exchangeValue(String dealAmount) {
+        if (dealAmount.contains(",")) {
+            dealAmount = dealAmount.replace(",","");
+        }
+        return Long.parseLong(dealAmount);
     }
 }
